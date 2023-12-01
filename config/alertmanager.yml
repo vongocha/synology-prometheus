@@ -1,0 +1,27 @@
+global:
+  resolve_timeout: 1m
+
+route:
+  # continue: false
+  # group_by:
+  # - job
+  group_wait: 30s
+  group_interval: 1m
+  repeat_interval: 4h
+  receiver: 'default-telegram'
+  routes:
+  - receiver: 'default-telegram'
+    continue: true
+
+receivers:
+ 
+- name: default-telegram
+  telegram_configs:
+  - api_url: https://api.telegram.org
+    bot_token: 5300061572:AAGOTVIoEkeNVOsA_FGrxmW9coNYc26SqHs
+    chat_id: -4024302682
+    disable_notifications: false
+    http_config:
+      follow_redirects: true
+    send_resolved: true
+    parse_mode: ""

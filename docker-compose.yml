@@ -1,0 +1,57 @@
+version: "3.8"
+services:
+  prometheus:
+    container_name: prometheus
+    image: prom/prometheus:v2.37.9
+    volumes:
+      - ./config/prometheus.yml:/etc/prometheus/prometheus.yml
+      - ./rules:/etc/prometheus/rules
+    command: "--config.file=/etc/prometheus/prometheus.yml --storage.tsdb.path=/prometheus"
+    ports:
+      - 9090:9090
+
+  grafana:
+    container_name: grafana
+    image: grafana/grafana:9.1.1
+    ports:
+      - "3000:3000"
+    depends_on:
+      - prometheus
+
+  alertmanager:
+    container_name: alertmanager
+    image: prom/alertmanager:latest
+    ports:
+      - 9093:9093
+    volumes:
+      - ./config/alertmanager.yml:/etc/alertmanager/alertmanager.yml
+      - ./config/grafana-datasources.yaml:/etc/grafana/provisioning/datasources/datasources.yaml
+    restart: always
+  
+  node-exporter:
+    privileged: true
+    image: prom/node-exporter:v1.3.1
+    container_name: synology
+    restart: unless-stopped
+    ports:
+      - "9100:9100"
+    volumes:
+      - /proc:/host/proc:ro
+      - /sys:/host/sys:ro
+      - /:/rootfs:ro
+    command:
+      - "--path.procfs=/host/proc"
+      - "--path.sysfs=/host/sys"
+      - "--collector.filesystem.ignored-mount-points"
+      - "^/(rootfs/)?(dev|etc|host|proc|run|sys|volume1)($$|/)"
+
+  snmp-exporter:
+    image: prom/snmp-exporter:v0.22.0
+    container_name: snmp_exporter
+    restart: unless-stopped
+    volumes:
+      - ./snmp-synology/snmp.yml:/etc/snmp_exporter/snmp.yml
+    ports:
+      - 9116:9116
+    command:
+      - "--config.file=/etc/snmp_exporter/snmp.yml"
